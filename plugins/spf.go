@@ -93,6 +93,14 @@ func (p *spfPlugin) Check(domain string) <-chan Issue {
 
 						text = strings.TrimSpace(text)
 
+						if text == "all" {
+							issuesChan <- Issue{
+								Severity:    SeverityError,
+								Message:     fmt.Sprintf("Configuration error, all defaults to +all."),
+								Description: "",
+							}
+						}
+
 						rule := "+"
 						switch text[0] {
 						case '+':
