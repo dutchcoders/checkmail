@@ -54,6 +54,11 @@ func (p *grabPlugin) Check(domain string) <-chan Issue {
 
 		for _, a := range r.Answer {
 			if mx, ok := a.(*dns.MX); ok {
+				addrs, err := net.LookupIP(mx.Mx)
+				if err != nil {
+					continue
+				}
+
 				config := &zlib.Config{
 					Port:               25,
 					Timeout:            time.Duration(5) * time.Minute, // some smtp servers have really large timeouts
@@ -73,71 +78,70 @@ func (p *grabPlugin) Check(domain string) <-chan Issue {
 					GOMAXPROCS:         1,
 				}
 
-				addrs, err := net.LookupIP(mx.Mx)
+				for _, addr := range addrs {
+					target := &zlib.GrabTarget{
+						Addr:   addr,
+						Domain: "localhost",
+					}
 
-				if err != nil {
-					// table.Append([]string{"Grab", "Could not resolve", color.RedString(fmt.Sprintf("%#v %s\n", mx.Mx, err))})
-				} else {
-					for _, addr := range addrs {
-						target := &zlib.GrabTarget{
-							Addr:   addr,
-							Domain: "localhost",
-						}
-
-						grab := zlib.GrabBanner(config, target)
-
-						if grab.Data.Banner != "" {
-							issuesChan <- Issue{
-								Severity: SeverityInfo,
-								Message:  fmt.Sprintf("Banner %s(%s) %s", mx.Mx, addr.String(), grab.Data.Banner),
-							}
-						}
-
-						if grab.Data.EHLO != "" {
-							issuesChan <- Issue{
-								Severity: SeverityDebug,
-								Message:  fmt.Sprintf("EHLO %s(%s) %s", mx.Mx, addr.String(), grab.Data.EHLO),
-							}
-						}
-
-						if grab.Data.SMTPHelp != nil {
-							issuesChan <- Issue{
-								Severity: SeverityDebug,
-								Message:  fmt.Sprintf("SMTP HELP %s(%s) %s", mx.Mx, addr.String(), *grab.Data.SMTPHelp),
-							}
-						}
-
-						if grab.Data.StartTLS != "" {
-							issuesChan <- Issue{
-								Severity: SeverityDebug,
-								Message:  fmt.Sprintf("TLS12 %s(%s) %s", mx.Mx, addr.String(), grab.Data.StartTLS),
-							}
-						} else {
-							issuesChan <- Issue{
-								Severity: SeverityError,
-								Message:  fmt.Sprintf("TLS12 not supported by server %s(%s)", mx.Mx, addr.String()),
-							}
-						}
-
-						if grab.Data.TLSHandshake != nil {
-							// table.Append([]string{"Grab", "Server certificates", color.YellowString(fmt.Sprintf("%#v (%#v) %s\n", mx.Mx, addr.String(), grab.Data.TLSHandshake.ServerCertificates.Certificate.Parsed.Subject.String()))})
-
-							issuesChan <- Issue{
-								Severity: SeverityInfo,
-								Message:  fmt.Sprintf("TLS Handshake: %s(%s) %s", mx.Mx, addr.String(), grab.Data.TLSHandshake.ServerCertificates.Certificate.Parsed.Subject.String()),
-							}
-							for _, sc := range grab.Data.TLSHandshake.ServerCertificates.Chain {
-								// table.Append([]string{"Grab", "Server certificates", color.YellowString(fmt.Sprintf("%#v (%#v) %s\n", mx.Mx, addr.String(), sc.Parsed.Subject.String()))})
-								_ = sc
-							}
-						}
-
-						if grab.Data.Heartbleed == nil {
-						} else if grab.Data.Heartbleed.Vulnerable {
-							// table.Append([]string{"Grab", "Heartbleed", color.YellowString(fmt.Sprintf("%#v (%#v) %s\n", mx.Mx, addr.String(), "Heartbleed vulnerable"))})
+					grab := zlib.GrabBanner(config, target)
+					if grab.Error != nil {
+						issuesChan <- Issue{
+							Severity: SeverityError,
+							Message:  fmt.Sprintf("Error grabbing banner %s(%s): %s: %s", mx.Mx, addr.String(), grab.ErrorComponent, grab.Error.Error()),
 						}
 					}
 
+					if grab.Data.Banner != "" {
+						issuesChan <- Issue{
+							Severity: SeverityInfo,
+							Message:  fmt.Sprintf("Banner %s(%s) %s", mx.Mx, addr.String(), grab.Data.Banner),
+						}
+					}
+
+					if grab.Data.EHLO != "" {
+						issuesChan <- Issue{
+							Severity: SeverityDebug,
+							Message:  fmt.Sprintf("EHLO %s(%s) %s", mx.Mx, addr.String(), grab.Data.EHLO),
+						}
+					}
+
+					if grab.Data.SMTPHelp != nil {
+						issuesChan <- Issue{
+							Severity: SeverityDebug,
+							Message:  fmt.Sprintf("SMTP HELP %s(%s) %s", mx.Mx, addr.String(), *grab.Data.SMTPHelp),
+						}
+					}
+
+					if grab.Data.StartTLS != "" {
+						issuesChan <- Issue{
+							Severity: SeverityDebug,
+							Message:  fmt.Sprintf("TLS12 %s(%s) %s", mx.Mx, addr.String(), grab.Data.StartTLS),
+						}
+					} else {
+						issuesChan <- Issue{
+							Severity: SeverityError,
+							Message:  fmt.Sprintf("TLS12 not supported by server %s(%s)", mx.Mx, addr.String()),
+						}
+					}
+
+					if grab.Data.TLSHandshake != nil {
+						// table.Append([]string{"Grab", "Server certificates", color.YellowString(fmt.Sprintf("%#v (%#v) %s\n", mx.Mx, addr.String(), grab.Data.TLSHandshake.ServerCertificates.Certificate.Parsed.Subject.String()))})
+
+						issuesChan <- Issue{
+							Severity: SeverityInfo,
+							Message:  fmt.Sprintf("TLS Handshake: %s(%s) %s", mx.Mx, addr.String(), grab.Data.TLSHandshake.ServerCertificates.Certificate.Parsed.Subject.String()),
+						}
+						for _, sc := range grab.Data.TLSHandshake.ServerCertificates.Chain {
+							// table.Append([]string{"Grab", "Server certificates", color.YellowString(fmt.Sprintf("%#v (%#v) %s\n", mx.Mx, addr.String(), sc.Parsed.Subject.String()))})
+							_ = sc
+						}
+					}
+
+					if grab.Data.Heartbleed == nil {
+					} else if grab.Data.Heartbleed.Vulnerable {
+						// table.Append([]string{"Grab", "Heartbleed", color.YellowString(fmt.Sprintf("%#v (%#v) %s\n", mx.Mx, addr.String(), "Heartbleed vulnerable"))})
+					}
 				}
 				//todo(nl5887): summary? found critical issues
 			}
