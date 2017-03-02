@@ -56,7 +56,7 @@ func (p *grabPlugin) Check(domain string) <-chan Issue {
 			if mx, ok := a.(*dns.MX); ok {
 				config := &zlib.Config{
 					Port:               25,
-					Timeout:            time.Duration(120) * time.Second,
+					Timeout:            time.Duration(5) * time.Minute, // some smtp servers have really large timeouts
 					TLS:                false,
 					TLSVerbose:         false,
 					TLSVersion:         ztls.VersionTLS12,
