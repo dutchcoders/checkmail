@@ -1,4 +1,10 @@
 # Check Email
+[![Build Status - Master](https://travis-ci.org/dutchcoders/checkmail.svg?branch=master)](https://travis-ci.org/dutchcoders/checkmail)
+[![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
+[![Project Status](http://opensource.box.com/badges/maintenance.svg)](http://opensource.box.com/badges)
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/dutchcoders/checkmail.svg)](http://isitmaintained.com/project/major/MySQLTuner-perl "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/dutchcoders/checkmail.svg)](http://isitmaintained.com/project/dutchcoders/checkmail "Percentage of issues still open")
+[![GPL Licence](https://badges.frapsoft.com/os/gpl/gpl.png?v=103)](https://opensource.org/licenses/GPL-3.0/)
 
 Check domain and email security configuration. 
 
