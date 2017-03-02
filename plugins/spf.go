@@ -151,7 +151,7 @@ func (p *spfPlugin) Check(domain string) <-chan Issue {
 						}
 					case "~":
 						issuesChan <- Issue{
-							Severity:    SeverityError,
+							Severity:    SeverityWarning,
 							Message:     fmt.Sprintf("SPF rule configured all to SOFT_FAIL"),
 							Description: "Allow mail whether or not it matches the parameters in the record",
 						}
