@@ -8,6 +8,7 @@ import (
 	"github.com/op/go-logging"
 
 	"github.com/dutchcoders/check-email-settings/plugins"
+	"strings"
 	"sync"
 )
 
@@ -87,7 +88,7 @@ func New() *Cmd {
 		for _, p := range plugins.Plugins {
 			plugin := p()
 
-			fmt.Printf("+++++++ %s +++++++++++++++++++++++++++++++++++++++++++++++++++++++\n", plugin.Name())
+			fmt.Printf("---- %s %s\n", plugin.Name(), strings.Repeat("-", 80-len(plugin.Name())))
 
 			wg := sync.WaitGroup{}
 
