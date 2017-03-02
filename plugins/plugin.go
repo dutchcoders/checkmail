@@ -26,8 +26,9 @@ const (
 )
 
 type Issue struct {
-	Severity Severity
-	Message  string
+	Severity    Severity
+	Message     string
+	Description string
 }
 
 var Plugins []PluginFn = []PluginFn{}

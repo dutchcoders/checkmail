@@ -128,23 +128,27 @@ func (p *spfPlugin) Check(domain string) <-chan Issue {
 							switch rule {
 							case "+":
 								issuesChan <- Issue{
-									Severity: SeverityError,
-									Message:  fmt.Sprintf("SPF rule configured all to PASS"),
+									Severity:    SeverityError,
+									Message:     fmt.Sprintf("SPF rule configured all to PASS"),
+									Description: "Allow all mail",
 								}
 							case "?":
 								issuesChan <- Issue{
-									Severity: SeverityError,
-									Message:  fmt.Sprintf("SPF rule configured all to NEUTRAL"),
+									Severity:    SeverityError,
+									Message:     fmt.Sprintf("SPF rule configured all to NEUTRAL"),
+									Description: "No policy statement",
 								}
 							case "~":
 								issuesChan <- Issue{
-									Severity: SeverityError,
-									Message:  fmt.Sprintf("SPF rule configured all to SOFT_FAIL"),
+									Severity:    SeverityError,
+									Message:     fmt.Sprintf("SPF rule configured all to SOFT_FAIL"),
+									Description: "Allow mail whether or not it matches the parameters in the record",
 								}
 							case "-":
 								issuesChan <- Issue{
-									Severity: SeverityOK,
-									Message:  fmt.Sprintf("SPF rule configured all to FAIL"),
+									Severity:    SeverityOK,
+									Message:     fmt.Sprintf("SPF rule configured all to FAIL"),
+									Description: "Only allow mail that matches one of the parameters (IPv4, MX, etc) in the record",
 								}
 							}
 
