@@ -67,8 +67,9 @@ func (p *spfPlugin) Check(domain string) <-chan Issue {
 
 		for _, a := range r.Answer {
 			if txt, ok := a.(*dns.TXT); ok {
-				// check spf record
-				//  "-all" previous not match
+				// https://emailcopilot.com/blog/how-should-i-end-my-spf-record-all/
+
+				allPolicy := "?"
 
 				for _, txt1 := range txt.Txt {
 					if !strings.HasPrefix(txt1, "v=spf1") {
@@ -125,33 +126,7 @@ func (p *spfPlugin) Check(domain string) <-chan Issue {
 								Message:  fmt.Sprintf("warning %s\n", color.RedString("If the given domain name resolves to any address, match (no matter the address it resolves to). This is rarely used. Along with the SPF macro language it offers more complex matches like DNSBL-queries.")),
 							}
 						case text == "all":
-							switch rule {
-							case "+":
-								issuesChan <- Issue{
-									Severity:    SeverityError,
-									Message:     fmt.Sprintf("SPF rule configured all to PASS"),
-									Description: "Allow all mail",
-								}
-							case "?":
-								issuesChan <- Issue{
-									Severity:    SeverityError,
-									Message:     fmt.Sprintf("SPF rule configured all to NEUTRAL"),
-									Description: "No policy statement",
-								}
-							case "~":
-								issuesChan <- Issue{
-									Severity:    SeverityError,
-									Message:     fmt.Sprintf("SPF rule configured all to SOFT_FAIL"),
-									Description: "Allow mail whether or not it matches the parameters in the record",
-								}
-							case "-":
-								issuesChan <- Issue{
-									Severity:    SeverityOK,
-									Message:     fmt.Sprintf("SPF rule configured all to FAIL"),
-									Description: "Only allow mail that matches one of the parameters (IPv4, MX, etc) in the record",
-								}
-							}
-
+							allPolicy = rule
 						case text == "a":
 						case strings.HasPrefix(text, "include:"):
 						}
@@ -160,6 +135,34 @@ func (p *spfPlugin) Check(domain string) <-chan Issue {
 					if err := scanner.Err(); err != nil {
 						fmt.Fprintln(os.Stderr, "reading input:", err)
 					}
+
+					switch allPolicy {
+					case "+":
+						issuesChan <- Issue{
+							Severity:    SeverityError,
+							Message:     fmt.Sprintf("SPF rule configured all to PASS"),
+							Description: "Allow all mail",
+						}
+					case "?":
+						issuesChan <- Issue{
+							Severity:    SeverityError,
+							Message:     fmt.Sprintf("SPF rule configured all to NEUTRAL"),
+							Description: "No policy statement",
+						}
+					case "~":
+						issuesChan <- Issue{
+							Severity:    SeverityError,
+							Message:     fmt.Sprintf("SPF rule configured all to SOFT_FAIL"),
+							Description: "Allow mail whether or not it matches the parameters in the record",
+						}
+					case "-":
+						issuesChan <- Issue{
+							Severity:    SeverityOK,
+							Message:     fmt.Sprintf("SPF rule configured all to FAIL"),
+							Description: "Only allow mail that matches one of the parameters (IPv4, MX, etc) in the record",
+						}
+					}
+
 				}
 
 			} else {
