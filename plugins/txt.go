@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	dns "github.com/miekg/dns"
+	"strings"
 )
 
 var (
@@ -46,11 +47,10 @@ func (p *txtPlugin) Check(domain string) <-chan Issue {
 
 		for _, a := range r.Answer {
 			if txt, ok := a.(*dns.TXT); ok {
-				for _, txt1 := range txt.Txt {
-					issuesChan <- Issue{
-						Severity: SeverityInfo,
-						Message:  fmt.Sprintf("%s", txt1),
-					}
+				str := strings.Join(txt.Txt, "")
+				issuesChan <- Issue{
+					Severity: SeverityInfo,
+					Message:  fmt.Sprintf("%s", str),
 				}
 			} else {
 				fmt.Printf("could not cast %#v\n", a)

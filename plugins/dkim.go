@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 	"github.com/miekg/dns"
+	"strings"
 )
 
 var (
@@ -67,14 +68,14 @@ func (d *dkimPlugin) Check(domain string) <-chan Issue {
 
 			for _, a := range r.Answer {
 				if txt, ok := a.(*dns.TXT); ok {
-					for _, str := range txt.Txt {
-						found = true
+					str := strings.Join(txt.Txt, "")
 
-						issuesChan <- Issue{
-							Severity: SeverityInfo,
-							Message:  fmt.Sprintf("DKIM record for selector '%s': %s", selector, str),
-						}
+					issuesChan <- Issue{
+						Severity: SeverityInfo,
+						Message:  fmt.Sprintf("DKIM record for selector '%s': %s", selector, str),
 					}
+
+					found = true
 				}
 			}
 		}
