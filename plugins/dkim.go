@@ -71,7 +71,7 @@ func (d *dkimPlugin) Check(domain string) <-chan Issue {
 						found = true
 
 						issuesChan <- Issue{
-							Severity: SeverityDebug,
+							Severity: SeverityInfo,
 							Message:  fmt.Sprintf("DKIM record for selector '%s': %s", selector, str),
 						}
 					}
