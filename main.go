@@ -1,6 +1,6 @@
 package main
 
-import "github.com/dutchcoders/check-email-settings/cmd"
+import "github.com/dutchcoders/checkmail/cmd"
 
 func main() {
 	app := cmd.New()

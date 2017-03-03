@@ -1,9 +1,6 @@
 package plugins
 
 import (
-
-	// "github.com/dutchcoders/check-email-settings/client"
-
 	"fmt"
 	"github.com/miekg/dns"
 	"strings"

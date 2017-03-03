@@ -7,7 +7,7 @@ import (
 	"github.com/minio/cli"
 	"github.com/op/go-logging"
 
-	"github.com/dutchcoders/check-email-settings/plugins"
+	"github.com/dutchcoders/checkmail/plugins"
 	"strings"
 	"sync"
 )
